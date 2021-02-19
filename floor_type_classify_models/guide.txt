@@ -1,0 +1,107 @@
+//Keras
+import tensorflow.keras
+from PIL import Image, ImageOps
+import numpy as np
+
+# Disable scientific notation for clarity
+np.set_printoptions(suppress=True)
+
+# Load the model
+model = tensorflow.keras.models.load_model('keras_model.h5')
+
+# Create the array of the right shape to feed into the keras model
+# The 'length' or number of images you can put into the array is
+# determined by the first position in the shape tuple, in this case 1.
+data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+
+# Replace this with the path to your image
+image = Image.open('test_photo.jpg')
+
+#resize the image to a 224x224 with the same strategy as in TM2:
+#resizing the image to be at least 224x224 and then cropping from the center
+size = (224, 224)
+image = ImageOps.fit(image, size, Image.ANTIALIAS)
+
+#turn the image into a numpy array
+image_array = np.asarray(image)
+
+# display the resized image
+image.show()
+
+# Normalize the image
+normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
+
+# Load the image into the array
+data[0] = normalized_image_array
+
+# run the inference
+prediction = model.predict(data)
+print(prediction)
+
+
+//android - imagefile
+
+//coral
+!pip3 install Pillow opencv-python opencv-contrib-python
+
+from edgetpu.classification.engine import ClassificationEngine
+from PIL import Image
+import cv2
+import re
+import os
+
+# the TFLite converted to be used with edgetpu
+modelPath = '<PATH_TO_MODEL>'
+
+# The path to labels.txt that was downloaded with your model
+labelPath = '<PATH_TO_LABELS>'
+
+# This function parses the labels.txt and puts it in a python dictionary
+def loadLabels(labelPath):
+    p = re.compile(r'\s*(\d+)(.+)')
+    with open(labelPath, 'r', encoding='utf-8') as labelFile:
+        lines = (p.match(line).groups() for line in labelFile.readlines())
+        return {int(num): text.strip() for num, text in lines}
+
+# This function takes in a PIL Image from any source or path you choose
+def classifyImage(image_path, engine):
+    # Load and format your image for use with TM2 model
+    # image is reformated to a square to match training
+    image = Image.open(image_path)
+    image.resize((224, 224))
+
+    # Classify and ouptut inference
+    classifications = engine.ClassifyWithImage(image)
+    return classifications
+
+def main():
+    # Load your model onto your Coral Edgetpu
+    engine = ClassificationEngine(modelPath)
+    labels = loadLabels(labelPath)
+
+    cap = cv2.VideoCapture(0)
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Format the image into a PIL Image so its compatable with Edge TPU
+        cv2_im = frame
+        pil_im = Image.fromarray(cv2_im)
+
+        # Resize and flip image so its a square and matches training
+        pil_im.resize((224, 224))
+        pil_im.transpose(Image.FLIP_LEFT_RIGHT)
+
+        # Classify and display image
+        results = classifyImage(pil_im, engine)
+        cv2.imshow('frame', cv2_im)
+        print(results)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+    main()
