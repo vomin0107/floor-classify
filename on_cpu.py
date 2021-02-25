@@ -7,8 +7,8 @@ import time
 np.set_printoptions(suppress=True)
 
 # Load the model
-model = tensorflow.keras.models.load_model('keras_model.h5', compile = False)
-label_file = open('labels.txt', 'r')
+model = tensorflow.keras.models.load_model('floor_type_classify_models/converted_keras/keras_model.h5', compile = False)
+label_file = open('floor_type_classify_models/converted_keras/labels.txt', 'r')
 label = []
 
 for l in label_file:
