@@ -52,7 +52,7 @@ def main():
 
         # Classify and display image
         results = classifyImage(pil_im, engine)
-        result[0][0] = class_value
+        class_value = results[0][0]
         probability = str(round(results[0][1]*100,1)) + '%'
         if class_value == 0:
             result = 'Wood '
