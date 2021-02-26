@@ -22,11 +22,11 @@ def loadLabels(labelPath):
 def classifyImage(image_path, engine):
     # Load and format your image for use with TM2 model
     # image is reformated to a square to match training
-    image = Image.open(image_path)
-    image.resize((224, 224))
+    #image = Image.open(image_path)
+    #image.resize((224, 224))
 
     # Classify and ouptut inference
-    classifications = engine.ClassifyWithImage(image)
+    classifications = engine.classify_with_image(image_path)
     return classifications
 
 def main():
@@ -49,16 +49,27 @@ def main():
 
         # Format the image into a PIL Image so its compatable with Edge TPU
         cv2_im = frame
-        pil_im = Image.fromarray(cv2_im)
+        cv2_im_input = cv2.resize(frame, (224, 224))
+        pil_im = Image.fromarray(cv2_im_input)
 
         # Resize and flip image so its a square and matches training
-        pil_im.resize((224, 224))
+        #pil_im.resize((224, 224))
         pil_im.transpose(Image.FLIP_LEFT_RIGHT)
 
         # Classify and display image
         results = classifyImage(pil_im, engine)
-        results = fps + results
-        cv2.putText(frame, results, (10,50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0))
+        result[0][0] = class_value
+        probability = str(round(results[0][1]*100,1)) + '%'
+        if class_value == 0:
+            result = 'Wood '
+        elif class_value == 1:
+            result = 'Yellow '
+        elif class_value == 2:
+            result = 'Marble '
+        else:
+            result = 'Carpet '
+        result = fps + result + probability
+        cv2.putText(frame, result, (10,50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0))
         cv2.imshow('frame', cv2_im)
         # print(results)
         if cv2.waitKey(1) & 0xFF == 27:
