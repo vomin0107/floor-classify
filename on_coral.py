@@ -20,11 +20,6 @@ def loadLabels(labelPath):
 
 # This function takes in a PIL Image from any source or path you choose
 def classifyImage(image_path, engine):
-    # Load and format your image for use with TM2 model
-    # image is reformated to a square to match training
-    #image = Image.open(image_path)
-    #image.resize((224, 224))
-
     # Classify and ouptut inference
     classifications = engine.classify_with_image(image_path)
     return classifications
@@ -53,7 +48,6 @@ def main():
         pil_im = Image.fromarray(cv2_im_input)
 
         # Resize and flip image so its a square and matches training
-        #pil_im.resize((224, 224))
         pil_im.transpose(Image.FLIP_LEFT_RIGHT)
 
         # Classify and display image
